@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Kernel 流式输出</title>
+    <script src="jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #response {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: scroll;
+        }
+        #history {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        #history-items {
+            margin-top: 10px;
+        }
+        #question {
+            width: 300px;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        #submit {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .history-item {
+            margin-bottom: 10px;
+            padding: 15px;
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .history-item:not(:first-child) {
+            margin-top: 10px;
+        }
+        .history-item p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Semantic Kernel 流式输出</h1>
+    
+    <!-- 用户输入区域 -->
+    <label for="question">输入问题：</label>
+    <input type="text" id="question" placeholder="请输入问题">
+    <button id="submit">发送</button>
+    
+    <!-- 实时响应区域 -->
+    <div id="response"></div>
+    
+    <!-- 历史记录区域 -->
+    <div id="history">
+        <h2>历史问答记录</h2>
+        <div id="history-items"></div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#submit').click(function () {
+                const questionInput = $('#question');
+                const originalQuestion = questionInput.val().trim();
+                
+                if (originalQuestion) {
+                    // 清空输入框
+                    questionInput.val('');
+                    
+                    // 显示加载状态
+                    $('#response').html('正在获取答案');
+                    let dots = 0;
+                    const loadingInterval = setInterval(() => {
+                        dots = (dots + 1) % 7;
+                        $('#response').html('正在获取答案' + '.'.repeat(dots));
+                    }, 200);
+
+                    // 发起请求
+                    $.ajax({
+                        url: 'http://localhost:5063/api/Chat/stream/landon',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ question: originalQuestion }),
+                        xhr: function() {
+                            const xhr = new XMLHttpRequest();
+                            let firstChunkReceived = false;
+                            const renderedData = new Set();
+                            
+                            xhr.onreadystatechange = function() {
+                                if (xhr.readyState === 3) {
+                                    const chunks = xhr.responseText.split('\n');
+                                    chunks.forEach(chunk => {
+                                        if (chunk.startsWith('data: ')) {
+                                            try {
+                                                const response = JSON.parse(chunk.substring(6));
+                                                if (response.status === 0) {
+                                                    if (!firstChunkReceived) {
+                                                        clearInterval(loadingInterval);
+                                                        $('#response').html('');
+                                                        firstChunkReceived = true;
+                                                    }
+                                                    if (!renderedData.has(response.data)) {
+                                                        $('#response').append(response.data);
+                                                        renderedData.add(response.data);
+                                                    }
+                                                }
+                                            } catch(e) {
+                                                console.error('解析错误:', e);
+                                            }
+                                        }
+                                    });
+                                }
+                            };
+                            return xhr;
+                        },
+                        success: () => {
+                            const currentTime = new Date().toLocaleString();
+                            const answer = $('#response').html();
+                            
+                            const historyItem = `
+                                <div class="history-item">
+                                    <p><strong>时间:</strong> ${currentTime}</p>
+                                    <p><strong>问题:</strong> ${originalQuestion}</p>
+                                    <p><strong>回答:</strong> ${answer}</p>
+                                </div>
+                            `;
+                            
+                            // 倒序插入最新记录
+                            $('#history-items').prepend(historyItem);
+                        },
+                        error: (xhr, status, error) => {
+                            clearInterval(loadingInterval);
+                            $('#response').html('请求失败，请重试');
+                            console.error('请求错误:', error);
+                        }
+                    });
+                } else {
+                    alert('请输入有效问题');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
