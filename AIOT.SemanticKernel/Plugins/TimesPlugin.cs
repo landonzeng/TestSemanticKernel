@@ -4,7 +4,6 @@ using System.ComponentModel;
 namespace AIOT.SemanticKernel.Plugins
 {
     public class TimesPlugin
-
     {
         [KernelFunction]
         [Description("返回当前时间")]
@@ -57,6 +56,5 @@ namespace AIOT.SemanticKernel.Plugins
 
             return result.ToString();
         }
-
     }
 }

@@ -33,6 +33,8 @@ namespace AIOT.SemanticKernel
             );
 
             builder.Plugins.AddFromType<TimesPlugin>();
+            builder.Plugins.AddFromType<WeatherPlugin>();
+            builder.Plugins.AddFromType<IPAddressPlugin>();
 
             _kernel = builder.Build();
             _sessions = new ConcurrentDictionary<string, ChatSession>();

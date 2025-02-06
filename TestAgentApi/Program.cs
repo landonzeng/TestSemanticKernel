@@ -1,5 +1,7 @@
 using AIOT.SemanticKernel;
 using AIOT.SemanticKernel.Options;
+using AIOT.SemanticKernel.Plugins;
+using System.Net.Security;
 using SessionOptions = AIOT.SemanticKernel.Options.SessionOptions;
 
 namespace TestAgentApi
