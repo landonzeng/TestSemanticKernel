@@ -45,7 +45,6 @@ namespace AIOT.SemanticKernel
 
         public IAsyncEnumerable<string> GetStreamingResponseAsync(string message, string account)
         {
-            _kernel.Plugins.Clear();
             var session = _sessions.GetOrAdd(account, _ => new ChatSession
             {
                 Account = account,
@@ -69,9 +68,9 @@ namespace AIOT.SemanticKernel
 
             var stream = chatService.GetStreamingChatMessageContentsAsync
                 (
-                    chatHistory: session.History,
-                    executionSettings: settings,
-                    kernel: _kernel
+                    session.History,
+                    settings,
+                    _kernel
                 );
 
             return ProcessStream(stream, session, fullResponse);

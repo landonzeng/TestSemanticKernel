@@ -13,7 +13,7 @@ namespace TestAgentApi
             var config = new SemanticKernelConfig
             {
                 ApiKey = builder.Configuration["Ollama:ApiKey"] ?? "ollama",
-                ModelId = builder.Configuration["Ollama:ModelId"] ?? "qwen2.5:7b",
+                ModelId = builder.Configuration["Ollama:ModelId"] ?? "qwen2.5:14b",
                 Endpoint = builder.Configuration["Ollama:Endpoint"] ?? "http://localhost:11434/v1/",
                 MaxTokens = int.TryParse(builder.Configuration["Ollama:MaxTokens"], out var mt) ? mt : 4096,
                 Temperature = double.TryParse(builder.Configuration["Ollama:Temperature"], out var temp) ? temp : 0.3
